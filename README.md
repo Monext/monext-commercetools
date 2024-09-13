@@ -1,9 +1,12 @@
-# connect-payment-integration-monext
+# [![Monext Logo](doc/logo-monext.svg)](https://www.monext.fr/)
+
+# Monext Sylius Plugin
 
 ---
 
 ## Table of Content
-----
+
+---
 
 - [Overview](#overview)
 - [Template Features](#template-features)
