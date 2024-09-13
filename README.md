@@ -1,6 +1,6 @@
 # [![Monext Logo](doc/logo-monext.svg)](https://www.monext.fr/)
 
-# Monext Sylius Plugin
+# Monext Commercetools Connector
 
 ---
 
