@@ -17,7 +17,6 @@ export const ConfirmPaymentResponseSchema = Type.Object({
 export const PaymentOutcomeSchema = Type.Enum(PaymentOutcome);
 
 export const PaymentRequestSchema = Type.Object({
-  paymentMethod: Type.String(),
   languageCode: Type.Optional(Type.String()),
 });
 
@@ -33,7 +32,7 @@ export const NotificationRequestQuery = Type.Object({
 
 export const ReturnRequestQuery = Type.Object({
   paymentReference: Type.String(),
-  token: Type.String(),
+  paylinetoken: Type.String(),
 });
 
 export const NotificationResponseSchema = Type.Object({

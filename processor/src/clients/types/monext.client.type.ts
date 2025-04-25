@@ -1,3 +1,5 @@
+export const originVersion = "Commercetools Checkout"
+
 export enum MonextBasePath {
   HOMOLOGATION = 'https://api-sandbox.retail.monext.com/v1/',
   PRODUCTION = 'https://api.retail.monext.com/v1/',
@@ -9,8 +11,8 @@ export enum MonextPaymentType {
 
 export enum MonextUrls {
   HEALTH_CHECK = 'checkout/alive',
-  CREATE_SESSION = 'checkout/sessions',
-  GET_SESSION_DETAILS = 'checkout/sessions/{resourceId}',
+  CREATE_SESSION = 'checkout/payments/sessions',
+  GET_SESSION_DETAILS = 'checkout/payments/sessions/{resourceId}',
   GET_TRANSACTION_DETAILS = 'checkout/transactions/{resourceId}',
   REFUND = 'checkout/transactions/{resourceId}/refunds',
   CAPTURE = 'checkout/transactions/{resourceId}/captures',

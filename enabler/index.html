@@ -61,13 +61,25 @@
               <h1 class="h3 mb-3 font-weight-normal">Dev Site</h1>
               <p>Use this site for development purposes</p>
             </div>
-            <div class="form-group">
-              <label for="cartId">Cart ID:</label>
-              <input
-                type="text"
-                class="form-control"
-                id="cartId"
-              />
+            <div class="row">
+              <div class="form-group col-md-6">
+                <div>
+                  <label for="cartId">Cart ID:</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cartId"
+                  />
+                </div>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="paymentMethod">Payment Method:</label>
+                <select
+                  class="form-control"
+                  id="paymentMethod"
+                  required
+                ></select>
+              </div>
             </div>
             <button
               id="createCheckout"
@@ -85,12 +97,61 @@
           <script type="module">
             import { Enabler } from "/src/main.ts";
 
+            document.addEventListener("DOMContentLoaded", async () => {
+              const paymentMethodSelect =
+                document.getElementById("paymentMethod");
+              const response = await fetch("http://localhost:9000/jwt/token", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  iss: "https://mc-api.europe-west1.gcp.commercetools.com",
+                  sub: "subject",
+                  "https://mc-api.europe-west1.gcp.commercetools.com/claims/project_key": `${__VITE_CTP_PROJECT_KEY__}`,
+                }),
+              });
+
+              const accessToken = await response.json();
+
+              const res = await fetch(
+                `${__VITE_PROCESSOR_URL__}/operations/payment-components`,
+                {
+                  method: "GET",
+                  headers: {
+                    Authorization: `Bearer ${accessToken.token}`,
+                  },
+                }
+              );
+              const paymentMethods = await res.json();
+              paymentMethods.components.forEach((method) => {
+                const option = document.createElement("option");
+                option.value = method.type;
+                option.textContent = method.type;
+                paymentMethodSelect.appendChild(option);
+              });
+              paymentMethods.dropins.forEach((method) => {
+                const option = document.createElement("option");
+                option.value = `${method.type}`;
+                option.textContent = `dropin-${method.type}`;
+                paymentMethodSelect.appendChild(option);
+              });
+            });
+
             document
               .getElementById("createCheckout")
               .addEventListener("click", async (event) => {
                 event.preventDefault();
                 const cartId = document.getElementById("cartId").value;
-                const sessionId = await getSessionId(cartId);
+
+                const paymentMethodSelect =
+                  document.getElementById("paymentMethod");
+                const selectedValue = paymentMethodSelect.value;
+                const selectedText =
+                  paymentMethodSelect.options[paymentMethodSelect.selectedIndex]
+                    .text;
+                const isDropin = selectedText.startsWith("dropin");
+                const sessionId = await getSessionId(cartId, isDropin);
 
                 const enabler = new Enabler({
                   processorUrl: __VITE_PROCESSOR_URL__,
@@ -106,14 +167,44 @@
                   },
                 });
 
-                enabler.createComponentBuilder("monext").then((builder) => {
-                  const paymentElement = builder.build({
-                    showPayButton: true,
+                let builder;
+
+                if (isDropin) {
+                  builder = await enabler.createDropinBuilder(selectedValue);
+                  const component = await builder.build({
+                    showPayButton: !builder.dropinHasSubmit,
+                    onDropinReady: async () => {
+                      console.log("Dropin Ready");
+                    },
+                    onPayButtonClick: async () => {
+                      // to be used for validation
+                      const termsChecked =
+                        document.getElementById("termsCheckbox").checked;
+                      if (!termsChecked) {
+                        event.preventDefault();
+                        alert("You must agree to the terms and conditions.");
+                        return Promise.reject("error-occurred");
+                      }
+                      return Promise.resolve(); // change to true, to test payment flow
+                    },
                   });
-                  paymentElement.mount("#monext-component");
-                });
+                  component.mount("#monext-component");
+                }
               });
           </script>
+          <div class="form-group form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="termsCheckbox"
+              required
+            />
+            <label
+              class="form-check-label"
+              for="termsCheckbox"
+              >I agree to the terms and conditions</label
+            >
+          </div>
           <div id="monext-component"></div>
         </div>
       </div>

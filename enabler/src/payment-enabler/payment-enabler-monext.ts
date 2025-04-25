@@ -1,9 +1,11 @@
-import { BaseOptions } from "../components/base";
-import { MonextBuilder } from "../components/payment-methods/monext/monext";
+import { DropinHppBuilder } from "../dropin/dropin-hpp";
 import {
+  DropinType,
   EnablerOptions,
   PaymentComponentBuilder,
+  PaymentDropinBuilder,
   PaymentEnabler,
+  PaymentResult,
 } from "./payment-enabler";
 
 declare global {
@@ -11,6 +13,14 @@ declare global {
     env: any;
   }
 }
+
+export type BaseOptions = {
+  processorUrl: string;
+  sessionId: string;
+  locale?: string;
+  onComplete: (result: PaymentResult) => void;
+  onError: (error?: any) => void;
+};
 
 export class MonextPaymentEnabler implements PaymentEnabler {
   setupData: Promise<{ baseOptions: BaseOptions }>;
@@ -47,8 +57,27 @@ export class MonextPaymentEnabler implements PaymentEnabler {
   ): Promise<PaymentComponentBuilder | never> {
     const { baseOptions } = await this.setupData;
 
+    const supportedMethods = {};
+
+    if (!Object.keys(supportedMethods).includes(type)) {
+      throw new Error(
+        `Component type not supported: ${type}. Supported types: ${Object.keys(
+          supportedMethods
+        ).join(", ")}`
+      );
+    }
+
+    return new supportedMethods[type](baseOptions);
+  }
+
+  async createDropinBuilder(
+    type: DropinType
+  ): Promise<PaymentDropinBuilder | never> {
+    const { baseOptions } = await this.setupData;
+
     const supportedMethods = {
-      monext: MonextBuilder,
+      //embedded: DropinEmbeddedBuilder,
+      hpp: DropinHppBuilder,
     };
 
     if (!Object.keys(supportedMethods).includes(type)) {

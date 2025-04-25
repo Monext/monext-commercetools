@@ -10,6 +10,7 @@ import {
   MonextTransactionDetails,
   MonextBasePath,
   MonextUrls,
+  originVersion,
 } from './types/monext.client.type';
 
 export class MonextAPI {
@@ -20,6 +21,7 @@ export class MonextAPI {
       headers: {
         accept: '*/*',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
     };
     try {
@@ -55,6 +57,7 @@ export class MonextAPI {
         accept: 'application/json',
         'content-type': 'application/json',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
       body: JSON.stringify(payload),
     };
@@ -67,7 +70,7 @@ export class MonextAPI {
       const data = await res.json();
       return data;
     } catch (err) {
-      log.error('Error creating session: ', err);
+      log.error('Error creating Monext session: ', err);
       throw err;
     }
   }
@@ -88,6 +91,7 @@ export class MonextAPI {
       headers: {
         accept: '*/*',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
     };
 
@@ -114,6 +118,7 @@ export class MonextAPI {
       headers: {
         accept: '*/*',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
     };
 
@@ -152,6 +157,7 @@ export class MonextAPI {
         accept: 'application/json',
         'content-type': 'application/json',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
       body: JSON.stringify(payload),
     };
@@ -189,6 +195,7 @@ export class MonextAPI {
         accept: 'application/json',
         'content-type': 'application/json',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
       body: JSON.stringify(payload),
     };
@@ -226,6 +233,7 @@ export class MonextAPI {
         accept: 'application/json',
         'content-type': 'application/json',
         authorization: `Basic ${config.monextApiKey}`,
+        'version': originVersion
       },
       body: JSON.stringify(payload),
     };

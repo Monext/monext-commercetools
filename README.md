@@ -6,8 +6,6 @@
 
 ## Table of Content
 
----
-
 - [Overview](#overview)
 - [Template Features](#template-features)
 - [Prerequisite](#prerequisite)
@@ -47,7 +45,7 @@ Their values are taken as input as environment variables/configuration for conne
 
 An API key provided by Monext is necessary to be configured so that the requests from the connect application can be authenticated by Monext platform within the integration. It's value is taken as input as environment variables/configuration for connect with variable name `MONEXT_API_KEY`.
 
-Additionally, some other configuration options provided by Monext and defined by the marchant are required. Their values are taken as input as environment variables/configuration for connect with variable names `MONEXT_ENVIRONMENT`, `MONEXT_POINT_OF_SALE_REF`, `MONEXT_CAPTURE_TYPE`.
+Additionally, some other configuration options provided by Monext and defined by the merchant are required. Their values are taken as input as environment variables/configuration for connect with variable names `MONEXT_ENVIRONMENT`, `MONEXT_POINT_OF_SALE_REF`, `MONEXT_CAPTURE_TYPE`.
 
 ## Getting started
 
@@ -151,6 +149,7 @@ Here you can see the details about the variables in configuration:
 ```
 // string - single REF for all stores or for all commercetools project.
 MONEXT_POINT_OF_SALE_REF: ref1;
+
 // string JSON valid - if multiple refs for multiple stores
 #MONEXT_POINT_OF_SALE_REF: {
    "storeKey1": "ref1",
@@ -163,6 +162,7 @@ MONEXT_POINT_OF_SALE_REF: ref1;
 ```
 // string - single capture type for all stores or for all commercetools project
 MONEXT_CAPTURE_TYPE: "AUTOMATIC";
+
 // string JSON valid - if multiple Capture types for multiple stores
 #MONEXT_CAPTURE_TYPE: {
    "storeKey1": "AUTOMATIC",
@@ -175,6 +175,7 @@ MONEXT_CAPTURE_TYPE: "AUTOMATIC";
 ```
 // string - single environment for all stores or for all commercetools project
 MONEXT_ENVIRONMENT: "HOMOLOGATION";
+
 // string JSON valid - if multiple environments for multiple stores
 #MONEXT_ENVIRONMENT: {
    "storeKey1": "HOMOLOGATION",
