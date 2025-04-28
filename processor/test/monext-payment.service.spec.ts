@@ -80,8 +80,8 @@ describe('monext-payment.service', () => {
 
   test('getSupportedPaymentComponents', async () => {
     const result = await paymentService.getSupportedPaymentComponents();
-    expect(result?.components).toHaveLength(1);
-    expect(result?.components[0]?.type).toStrictEqual('monext');
+    expect(result?.dropins).toHaveLength(1);
+    expect(result?.dropins[0]?.type).toStrictEqual('hpp');
   });
 
   test('getStatus', async () => {
@@ -113,7 +113,7 @@ describe('monext-payment.service', () => {
   test('create monext payment', async () => {
     const createPaymentOpts: CreatePaymentRequest = {
       data: {
-        paymentMethod: 'monext',
+        languageCode: undefined,
       },
     };
     jest.spyOn(DefaultCartService.prototype, 'getCart').mockReturnValue(Promise.resolve(mockGetCartResult()));
@@ -134,7 +134,7 @@ describe('monext-payment.service', () => {
 
   test('confirm monext payment', async () => {
     const confirmPaymentPayload: ConfirmPaymentRequest = {
-      token: 'monextToken1',
+      paylinetoken: 'monextToken1',
       paymentReference: PAYMENT_ID,
     };
     jest

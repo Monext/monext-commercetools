@@ -57,7 +57,11 @@ export const paymentRoutes = async (fastify: FastifyInstance, opts: FastifyPlugi
       preHandler: [opts.SessionQueryParamHook.authenticate()],
       schema: {
         params: {
-          paymentId: Type.String(),
+          type: 'object',
+          properties: {
+            paymentId: Type.String(),
+          },
+          required: ['paymentId'],
         },
         response: {
           200: NotificationResponseSchema,

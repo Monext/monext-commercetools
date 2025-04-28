@@ -4,17 +4,10 @@ import {
   PaymentMethod,
   PaymentResult,
 } from "../payment-enabler/payment-enabler";
+import { BaseOptions } from "../payment-enabler/payment-enabler-monext";
 
 export type ElementOptions = {
   paymentMethod: PaymentMethod;
-};
-
-export type BaseOptions = {
-  processorUrl: string;
-  sessionId: string;
-  locale?: string;
-  onComplete: (result: PaymentResult) => void;
-  onError: (error?: any) => void;
 };
 
 /**
@@ -54,4 +47,5 @@ export abstract class BaseComponent implements PaymentComponent {
       expiryDate?: string;
     };
   };
+  isAvailable?(): Promise<boolean>;
 }

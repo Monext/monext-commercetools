@@ -43,7 +43,7 @@ const getSessionId = async (cartId) => {
 
   const sessionMetadata = {
     processorUrl: __VITE_PROCESSOR_URL__,
-    allowedPaymentMethods: ["monext"], // add here your allowed methods for development purposes
+    merchantReturnUrl: __VITE_RETURN_URL__,
   };
 
   const url = `${__VITE_CTP_SESSION_URL__}/${projectKey}/sessions`;

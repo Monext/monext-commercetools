@@ -194,13 +194,14 @@ Use the token to authenticate requests protected by JWT: `Authorization: Bearer 
 The processor exposes following endpoints to execute various operations with Monext platform:
 
 | endpoints      | Method | URL                                    | Call Monext API | Use Payment Id | Authentication Method                                 |
-| -------------- | ------ | -------------------------------------- | --------------- | -------------- | ----------------------------------------------------- |
-| config         | GET    | /operations/config                     | No              | No             | SessionHeaderAuthenticationHook                       |
-| status         | GET    | /operations/status                     | Yes             | No             | JWTAuthenticationHook                                 |
-| createPayment  | POST   | /payment                               | Yes             | Yes            | SessionHeaderAuthenticationHook                       |
-| confirmPayment | GET    | /return                                | Yes             | Yes            | SessionQueryParamAuthenticationHook                   |
-| notifyPayment  | GET    | /notification/:paymentId               | Yes             | Yes            | SessionQueryParamAuthenticationHook                   |
-| transactions   | POST   | /operations/payment-intents/:paymentId | Yes             | Yes            | Oauth2AuthenticationHook + AuthorityAuthorizationHook |
+| ------------------ | ------ | -------------------------------------- | --------------- | -------------- | ----------------------------------------------------- |
+| config             | GET    | /operations/config                     | No              | No             | SessionHeaderAuthenticationHook                       |
+| status             | GET    | /operations/status                     | Yes             | No             | JWTAuthenticationHook                                 |
+| Supported Payments | GET    | /operations/payment-components         | No              | No             | JWTAuthenticationHook                                 |
+| createPayment      | POST   | /payment                               | Yes             | Yes            | SessionHeaderAuthenticationHook                       |
+| confirmPayment     | GET    | /return                                | Yes             | Yes            | SessionQueryParamAuthenticationHook                   |
+| notifyPayment      | GET    | /notification/:paymentId               | Yes             | Yes            | SessionQueryParamAuthenticationHook                   |
+| transactions       | POST   | /operations/payment-intents/:paymentId | Yes             | Yes            | Oauth2AuthenticationHook + AuthorityAuthorizationHook |
 
 ### GET config
 
@@ -288,6 +289,34 @@ It returns following attributes in response:
 
 - metadata: It lists a collection of metadata including the name/description of the connector and the version of SDKs used to connect to external system.
 
+
+### Get supported payment components
+
+Private endpoint protected by JSON Web Token that exposes the payment methods supported by the connector so that checkout application can retrieve the available payment components.
+
+#### Endpoint
+
+`GET /operations/payment-components`
+
+#### Request Parameters
+
+N/A
+
+#### Response Parameters
+
+Now the connector supports the dropin type `hpp`
+
+```
+{
+    "dropins": [
+        {
+            "type": "hpp"
+        }
+    ],
+    "components": []
+}
+```
+
 ### POST createPayment
 
 Endpoint called by the merchant to provide the data for payment creation payment creation in the Monext API.
@@ -301,7 +330,6 @@ Endpoint called by the merchant to provide the data for payment creation payment
 ```
 {
   languageCode?: <Language-of-payment-hosted-page>,
-  paymentMethod: "monext"
 }
 ```
 
@@ -343,7 +371,7 @@ Confirms a payment by updating the payment in Commercetools and the Monext API.
 
 ```
 {
-    token: <monext-session-id>,
+    paylinetoken: <monext-session-id>,
     paymentReference: <paymentId>
 }
 ```
@@ -362,7 +390,7 @@ It returns following attributes in response:
 }
 ```
 
-Considering that the plugin is not currently compatible with Commercetools checkout, we can use the query parameter `paymentReference` for recovering the Cart Id [Using Query Carts and passing `paymentReference` as QueryPredicate](https://docs.commercetools.com/api/projects/carts#query-carts).
+If this module is implemented without Commercetools Checkout, the query parameter `paymentReference` can be used for recovering the Cart Id [Using Query Carts and passing `paymentReference` as QueryPredicate](https://docs.commercetools.com/api/projects/carts#query-carts).
 
 Once you have the Cart Id, you can [use the endpoint for Create order from cart](https://docs.commercetools.com/api/projects/orders#create-order-from-cart).
 

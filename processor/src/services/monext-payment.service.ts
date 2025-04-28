@@ -159,11 +159,12 @@ export class MonextPaymentService extends AbstractPaymentService {
    */
   public async getSupportedPaymentComponents(): Promise<SupportedPaymentComponentsSchemaDTO> {
     return {
-      components: [
+      dropins: [
         {
-          type: Labels.MONEXT,
+          type: 'hpp',
         },
       ],
+      components: [],
     };
   }
 
@@ -422,14 +423,22 @@ export class MonextPaymentService extends AbstractPaymentService {
     // Get the processor URL from context
     const processorURL = getProcessorUrlFromContext();
 
-    // Get Commercetools customer info
-    const customer = await this.cptClient.getCustomerById(ctCart.customerId as string);
+    // Get Commercetools customer info if exist
+    let customer;
+    try {
+      customer = await this.cptClient.getCustomerById(ctCart.customerId as string);
+    } catch (e) {
+      customer = undefined;
+    }
+
+    // Get the planned amount
+    const amountPlanned = await this.ctCartService.getPaymentAmount({
+      cart: ctCart,
+    });
 
     // Create Commercetools payment
     const ctPayment = await this.ctPaymentService.createPayment({
-      amountPlanned: await this.ctCartService.getPaymentAmount({
-        cart: ctCart,
-      }),
+      amountPlanned,
       paymentMethodInfo: {
         paymentInterface: getPaymentInterfaceFromContext() || Labels.MONEXT,
       },
@@ -441,8 +450,8 @@ export class MonextPaymentService extends AbstractPaymentService {
       }),
       ...(!ctCart.customerId &&
         ctCart.anonymousId && {
-          anonymousId: ctCart.anonymousId,
-        }),
+        anonymousId: ctCart.anonymousId,
+      }),
     });
 
     // Add payment to cart
@@ -458,7 +467,7 @@ export class MonextPaymentService extends AbstractPaymentService {
     const monextSessionPayload = sessionPayload(
       ctPayment,
       ctCart,
-      customer.body,
+      customer && customer.body,
       ctsid,
       processorURL,
       request.data.languageCode,
@@ -488,7 +497,7 @@ export class MonextPaymentService extends AbstractPaymentService {
     } catch (e) {
       await this.ctPaymentService.updatePayment({
         id: ctPayment.id,
-        paymentMethod: request.data.paymentMethod,
+        paymentMethod: Labels.MONEXT,
         transaction: {
           type: TransactionTypes.AUTHORIZATION,
           amount: ctPayment.amountPlanned,
@@ -515,7 +524,6 @@ export class MonextPaymentService extends AbstractPaymentService {
     const ctPayment = await this.ctPaymentService.getPayment({
       id: request.paymentReference,
     });
-
     // End if payment is already notified
     if (ctPayment.transactions[0].state !== TransactionStates.INITIAL) {
       return {
@@ -524,18 +532,18 @@ export class MonextPaymentService extends AbstractPaymentService {
       };
     }
 
-    const monextSessionDetails = await this.monextClient.getSessionDetails(request.token, environment);
-
+    const monextSessionDetails = await this.monextClient.getSessionDetails(request.paylinetoken, environment);
+    const cancelledByUser = monextSessionDetails.title === 'CANCELLED';
     //Payment cancelled by user
     if (monextSessionDetails.title && monextSessionDetails.title !== 'ACCEPTED') {
       await this.ctPaymentService.updatePayment({
         id: ctPayment.id,
-        pspReference: request.token,
+        pspReference: request.paylinetoken,
         paymentMethod: Labels.MONEXT,
         transaction: {
           type: ctPayment.transactions[0].type,
           amount: ctPayment.amountPlanned,
-          interactionId: request.token,
+          interactionId: request.paylinetoken,
           state: TransactionStates.FAILURE,
         },
       });
@@ -543,16 +551,16 @@ export class MonextPaymentService extends AbstractPaymentService {
       // Payment successful or failed
       await this.ctPaymentService.updatePayment({
         id: ctPayment.id,
-        pspReference: request.token,
+        pspReference: request.paylinetoken,
         paymentMethod: this.returnPaymentMethod(monextSessionDetails),
         transaction: {
           type:
             monextSessionDetails.transactions &&
-            monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
+              monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
               ? TransactionTypes.AUTHORIZATION
               : TransactionTypes.CHARGE,
           amount: ctPayment.amountPlanned,
-          interactionId: request.token,
+          interactionId: request.paylinetoken,
           state:
             monextSessionDetails.result && monextSessionDetails.result.title === SessionResult.ACCEPTED
               ? TransactionStates.SUCCESS
@@ -560,10 +568,9 @@ export class MonextPaymentService extends AbstractPaymentService {
         },
       });
     }
-
     return {
       paymentReference: ctPayment.id,
-      returnUrl: this.buildRedirectMerchantUrl(ctPayment.id),
+      returnUrl: this.buildRedirectMerchantUrl(ctPayment.id, cancelledByUser),
     };
   }
 
@@ -615,7 +622,7 @@ export class MonextPaymentService extends AbstractPaymentService {
         transaction: {
           type:
             monextSessionDetails.transactions &&
-            monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
+              monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
               ? TransactionTypes.AUTHORIZATION
               : TransactionTypes.CHARGE,
           amount: ctPayment.amountPlanned,
@@ -630,7 +637,7 @@ export class MonextPaymentService extends AbstractPaymentService {
         status: monextSessionDetails.result?.title || (monextSessionDetails.title as string),
         type:
           monextSessionDetails.transactions &&
-          monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
+            monextSessionDetails.transactions[0].type === MonextTransactionTypes.AUTHORIZATION
             ? TransactionTypes.AUTHORIZATION
             : TransactionTypes.CHARGE,
       };
@@ -643,11 +650,14 @@ export class MonextPaymentService extends AbstractPaymentService {
    * @param {string} paymentReference - The payment reference to include in the redirect URL.
    * @return {string} The constructed redirect URL.
    */
-  private buildRedirectMerchantUrl(paymentReference: string): string {
+  private buildRedirectMerchantUrl(paymentReference: string, cancelledByUser: boolean = false): string {
     // Get the merchan return URL from context
     const merchantReturnUrl = getMerchantReturnUrlFromContext();
     const redirectUrl = new URL(merchantReturnUrl || getConfig().returnUrl);
     redirectUrl.searchParams.append('paymentReference', paymentReference);
+    if (cancelledByUser) {
+      redirectUrl.searchParams.append('userAction', 'cancelled');
+    }
     return redirectUrl.toString();
   }
 
